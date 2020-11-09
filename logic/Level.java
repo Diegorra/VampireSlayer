@@ -35,6 +35,7 @@ public enum Level {
 		return this.numberOfVampires;
 	}
 	
+	
 	public double getVampireFreq() {
 		return this.vampireFrequency;
 	}

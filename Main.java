@@ -10,12 +10,7 @@ public class Main {
 	public static final String levelInfoMsg = "Level must be one of: " + Level.all(", ");
 	public static final String seedIsNumberMsg = "the seed must be a number";
 	public static final String seedInfoMsg = "Random generator initialized with seed: ";
-	/*
-	 * private int health, pos_x , pos_y;
-	 * 
-	 * public Vampire() { this.health = 5; this.pos_y = 0; }
-	 */
-
+	
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 2)
 			System.out.print(usageMsg);

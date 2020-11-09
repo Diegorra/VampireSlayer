@@ -1,88 +1,134 @@
 //hace referencia al juego(jugador, turnos...)
 package logic;
 
+import java.util.Random;
+
 import logic.gameObjects.Player;
-import logic.list.SlayerList;
-import logic.list.VampireList;
 
 public class Game {
-	long seed;
-	static Level level;
-	static Player player;
-	public static String[][] board ;//= new board[level.getDimX()][level.getDimY()];
-	public static int turn;
 	
+	long seed;
+	private Level level;
+	private GameObjectBoard gameOB ;
+	private Player player;
+	private int cycles;
+	private Random random;
 	
 	public Game(Long seed, Level level)/*constructor de game*/ {
 		this.seed = seed;
 		this.level = level;
+		this.gameOB = new GameObjectBoard(this.level);
+		this.player = new Player();
+		this.random = new Random();
 	}
-
-	public static void initObjects()/*función inicializa objetos del juego*/ {
+	
+	public int getCycles() {
+		return this.cycles;
+	}
+	
+	public Level getLevel() {
+		return this.level;
+	}
+	
+	public GameObjectBoard getGameOB() {
+		return this.gameOB;
+	}
+	
+	public Player getPlayer() {
+		return player;
+	}
+	
+	public void initObjects()/*función inicializa objetos del juego*/ {
 		
 		//inicializamos a null todas las posiciones del tablero
-		for(int i=0; i < level.getDimX() ; i++) {
-			for(int j =0; j < level.getDimY(); j++){
-				board[i][j] = "N";
+		for(int i=0; i < level.getDimY() ; i++) {
+			for(int j =0; j < level.getDimX(); j++){
+				gameOB.getBoard()[i][j] = "N";
 			}
 		}
 		
-		//inicializamos el numero de turnos a 0, listas vacias, el jugador...
-		player = new Player();
-		turn = 0;
+		//inicializamos listas vacias, el dinero del jugador
+		player.setMoney(50);
+		gameOB.getSl().sefSLcont(0);
+		gameOB.getVl().setVLcont(0);
+		this.cycles = 0;
 		
 		
 	}
 
-	public static void update(int turn) {
-		player.recieveMoney();//se actualiza el dinero del jugador
-		GameObjectBoard.update(turn);//se generan y mueven vampiros
-		for(int i=0; i < SlayerList.getSLcont(); i++) {//los slayer atacan
-			attackSlayer(i);
+	public void update() {
+		player.recieveMoney(this.random);//se actualiza el dinero del jugador
+		gameOB.update(cycles, this.random);//se generan y mueven vampiros
+		if(gameOB.getVl().getVLcont() != 0 && gameOB.getSl().getSLcont() != 0) {
+			for(int i=0; i < gameOB.getSl().getSLcont(); i++) {//los slayer atacan
+				attackSlayer(i);
+			}
+			for(int j=0; j < gameOB.getVl().getVLcont(); j++) {//los vampiros atacan
+				attackVampire(j);
+			}
 		}
-		for(int j=0; j < VampireList.getVLcont(); j++) {//los vampiros atacan
-			attackVampire(j);
-		}
-		turn++;//se actualiza el turno
+		cycles++;//se actualiza el turno
 	}
 
-	public static void reset() {
+	public void reset() {
+		gameOB = new GameObjectBoard(this.level);
 		initObjects();
 	}
 
-	public static void attackSlayer(int num) {
+	public void attackSlayer(int num) {
 		//buscamos un vampiro en su fila y en caso de encontrarlo actualizamos vida vampire
-		int i= SlayerList.slayerList[num].getPosX()+1;
-		int y = SlayerList.slayerList[num].getPosY();
+		int i = gameOB.getSl().getSlayerList()[num].getPosX()+1;
+		int y = gameOB.getSl().getSlayerList()[num].getPosY();
 		int posV=0;
 		
-		while(board[i][y] != "V" && i < level.getDimX()) {
-			posV = VampireList.searchVampire(i, y);
-			VampireList.vampireList[posV].updateHealth();
-			//miramos si está muerto
-			if(VampireList.vampireList[posV].getHealth()== 0) {
-				GameObjectBoard.removeDead(i, y);
-				VampireList.deleteVampire(posV);
-			}
+		while(gameOB.getBoard()[y][i] == "N" && i < level.getDimX()-1) {
 			i++;
+		}
+		if(gameOB.getBoard()[y][i] == "V") {
+			posV = gameOB.getVl().searchVampire(y, i);			
+			gameOB.getVl().getVampireList()[posV].updateHealth();
+			//miramos si está muerto
+			if(gameOB.getVl().getVampireList()[posV].getHealth() == 0) {
+				gameOB.removeDead(y, i);
+				gameOB.getVl().deleteVampire(posV);
+			}
 		}
 	}
 
-	public static void attackVampire(int num) {
+	public void attackVampire(int num) {
 		//si tiene delante un slayer le quita un punto de vida
 		int posS;
-		int x = VampireList.vampireList[num].getPosX();
-		int y=VampireList.vampireList[num].getPosY();
+		int x = gameOB.getVl().getVampireList()[num].getPosX();
+		int y = gameOB.getVl().getVampireList()[num].getPosY();
 		
-		if(board[x-1][y] == "S") {
-			posS = SlayerList.searchSlayer(x-1, y);
-			SlayerList.slayerList[posS].updateHealth();	
+		if(x != 0 &&  y != 0 && gameOB.getBoard()[y][x-1] == "S") {
+			posS = gameOB.getSl().searchSlayer(y, x-1);
+			gameOB.getSl().getSlayerList()[posS].updateHealth();	
 			//miramos si esta muerto
-			if(SlayerList.slayerList[posS].getHealth() == 0) {
-				GameObjectBoard.removeDead(x-1, y);
-				SlayerList.deleteSlayer(posS);
+			if(gameOB.getSl().getSlayerList()[posS].getHealth() == 0) {
+				gameOB.removeDead(y, x-1);
+				gameOB.getSl().deleteSlayer(posS);
 			}
 		}
 		
+	}
+	
+	public boolean isFinished() {
+		boolean exit = false;
+		int i=0;
+		if(gameOB.getVl().getVLcontmuertos() == level.getNumVampires())/*cuando no hay vampiros gana jugador*/ {
+			System.out.println("Player wins");
+			exit = true;
+		}
+		else/*cuando un vampiro llega a la columna 0 ganan vampiros*/{
+			while(i < gameOB.getVl().getVLcont() && !exit) {
+				if(gameOB.getVl().getVampireList()[i].getPosX() == 0) {
+					System.out.println("Vampires wins");
+					exit = true;
+				}
+				i++;
+			}	
+		}
+		return exit;
 	}
 }
