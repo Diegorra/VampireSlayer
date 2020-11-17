@@ -38,7 +38,7 @@ public class Game {
 		return player;
 	}
 	
-	public void initObjects()/*función inicializa objetos del juego*/ {
+	public void initObjects()/*funciï¿½n inicializa objetos del juego*/ {
 		
 		//inicializamos a null todas las posiciones del tablero
 		for(int i=0; i < level.getDimY() ; i++) {
@@ -87,7 +87,7 @@ public class Game {
 		if(gameOB.getBoard()[y][i] == "V") {
 			posV = gameOB.getVl().searchVampire(y, i);			
 			gameOB.getVl().getVampireList()[posV].updateHealth();
-			//miramos si está muerto
+			//miramos si estï¿½ muerto
 			if(gameOB.getVl().getVampireList()[posV].getHealth() == 0) {
 				gameOB.removeDead(y, i);
 				gameOB.getVl().deleteVampire(posV);
