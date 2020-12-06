@@ -1,58 +1,62 @@
-package logic.gameObjects;
+package logic.GameObjects;
 
-public class Slayer {
-	
-	 //creamos una serie de constantes que se mantienen durante toda la ejecucion del progama 
-	 public static final int COST=50; 
-	 public static final int DAMAGE=1;
-	  
-	 //definimos atributos propios del objeto 
-	 private int health; 
-	 private int pos_x, pos_y;
+import logic.Game;
 
-	 
-	 
-	//METODOS
-	 
-	 //usamos un constructor 
-	 public Slayer(int pos_y, int pos_x){ 
-		 this.health = 3;
-		 this.pos_x =pos_x; 
-		 this.pos_y = pos_y;
-	 }
-	 
-	//creamos métodos getter
-	public int getHealth() {
-		return this.health;
-	}
+public class Slayer extends GameObject{
 	
-	public int getPosY() { //Filas
-		return this.pos_y;
-	}
+	public static final int COST = 50;
 	
-	public int getPosX() { //Columnas
-		return this.pos_x;
-	}
-	
-	//creamos métodos setter
-	public void setHealth(int a) {
-		this.health= a;
-	}
-	
-	public void setPosX(int x) {
-		this.pos_x = x;
-	}
-	
-	public void setPosY(int y) {
-		this.pos_y = y;
-	}
-	
-	//creamos metodo que actualiza la vida 
-	public void updateHealth() {
-		this.health--;		
+	public Slayer(int x, int y, Game game) {
+		super(x, y, 3, game);
 	}
 	
 	
+	@Override
+	public void attack() {
+		int i = this.getPos_x() + 1;
+		boolean attackable = false;
+		if(isAlive()) {
+			//recorermos la fila buscando un vampiro al que poder atacar
+			while(i < game.getLevel().getDimX() && !attackable) {
+				IAttack other = game.getAttackableInPosition(i, super.pos_y, "defensivo"); 
+				if(other != null) {//en caso de encontrarlo recive el ataque del slayer
+					other.receiveSlayerAttack(damage);
+					attackable = true;
+				}
+				else if(game.getGameOB().getBoard()[super.pos_y][i] == "S") {/*si delante tiene un slayer no puede no podrá atacar*/
+					attackable = true;
+				}
+				i++;
+			}
+		}
+	}
+
+	@Override
+	public void move() {
+		// TODO Auto-generated method stub
 		
-}
+	}
 
+	@Override
+	public boolean arriveEnd() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	@Override
+	public int getZ() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+	//si un slayer es atacado se actualiza su vida
+	public boolean receiveVampireAttack(int damage) {
+		super.updateHealth(damage);
+		return true;
+	}
+	
+	public boolean receiveDraculaAttack() {
+		super.health = 0;
+		return true;
+	}
+}

@@ -1,75 +1,97 @@
-package logic.gameObjects;
+package logic.GameObjects;
 
-public class Vampire {
-	 
-	//creamos una serie de constantes que se mantienen durante toda la ejecucion del progama  
-	 public static final int FREQUENCY = 2; 
-	 public static final int DAMAGE=1;
-	  
-	 //definimos atributos propios del objeto 
-	 private int health; 
-	 private int pos_x, pos_y;
-	 private int turn;
+import logic.Game;
 
-	 //METODOS
-	 
-	 //usamos un constructor 
-	 public Vampire(int pos_y, int pos_x, int turn){ 
-		 this.health = 5;
-		 this.pos_x =pos_x; 
-		 this.pos_y = pos_y;
-		 this.turn = turn;
-	 }
+public class Vampire extends GameObject {
+
+	public static final int FREQUENCY = 2; 
+	private int turn;
 	
-	 //creamos métodos getter	
-	 public int getHealth() {
-		 return this.health;
+	public Vampire(int x, int y, Game game, int turn) {
+		super(x, y, 5, game);
+		this.turn = turn;
+	}
+
+	/**
+	 * @return the turn
+	 */
+	public int getTurn() {
+		return turn;
+	}
+
+
+	/**
+	 * @param turn the turn to set
+	 */
+	public void setTurn(int turn) {
+		this.turn = turn;
 	}
 	
-	 public int getPosY() {
-		 return this.pos_y;
-	 }
+	@Override
+	public void attack() {
+		if(isAlive()) {
+			//comprobamos si hay un slayer en la casilla de su izquierda
+			IAttack other = game.getAttackableInPosition(super.pos_x-1,super.pos_y, "atacante");
+			if(other != null) {//sin lo encontramos recive el ataque del vampire
+				other.receiveVampireAttack(damage);
+				//si elimina un blood bank actualizamos su vida
+				if(game.getGameOB().getBoard()[super.pos_y][super.pos_x-1] == "B") {
+					super.health+=1;
+				}
+			}
+		}
+	}
 	
-	 public int getPosX() {
-		 return this.pos_x;
-	 }
+	@Override
+	//movimiento del vampiro
+	public void move() {
+		//comprueba si le toca mover y puede moverse y en caso de ser true mueve 
+		if(game.getCycles() != this.turn && (game.getCycles() % 2 == this.turn % 2) && game.getGameOB().getList().searchObject(super.pos_x-1, super.pos_y) == -1) {
+			game.getGameOB().getBoard()[super.pos_y][super.pos_x-1] = game.getGameOB().getBoard()[super.pos_y][super.pos_x];
+			game.getGameOB().getBoard()[super.pos_y][super.pos_x] = null;
+			super.pos_x -=1;
+		}
+	}
 	
-	 public int getTurn() {
-		 return this.turn;
-	 }
-	 
-	 //creamos métodos setter
-	 public void setHealth(int a) {
-		 this.health = a;
-	 }
-	 
-	 public void setPosX(int x) {
-		 this.pos_x = x;
-	 }
-	 
-	 public void setPosY(int y) {
-		 this.pos_y = y;
-	 }
-	 
-	 public void setTurn(int a) {
-		 this.turn = a;
-	 }
-	 
-	 //creamos un metodo que actualiza la vida 
-	 public void updateHealth() {
-		 this.health--;		
-	 }
-	 
-	 //creamos un método que actualiza la pos
-	 public void updatePosX() {
-		 this.pos_x--;
-	 }
+	@Override
+	//si un vampiro llega al final ganan los vampiros
+	public boolean arriveEnd() {
+		if(super.pos_x == 0) {
+			return true;
+		}
+		return false;
+	}
+	
+	@Override
+	public int getZ() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+	//cuando un vampiro recive un ataque se actualiza su vida
+	public boolean receiveSlayerAttack(int damage) {
+		super.updateHealth(damage);
+		return true;
+	}
+	
+	//el vampiro se ve empujado a la derecha si está en la última columna muere
+	public boolean receiveGarlicPush() {
+		if(super.pos_x == game.getLevel().getDimX()-1) {
+			super.health = 0;
+		}else if(game.getGameOB().getBoard()[super.pos_y][super.pos_x+1] == null) {
+			game.getGameOB().getBoard()[super.pos_y][super.pos_x+1] = game.getGameOB().getBoard()[super.pos_y][super.pos_x];
+			game.getGameOB().getBoard()[super.pos_y][super.pos_x] = null;
+			super.pos_x++;
+			this.turn = game.getCycles();//se quedan aturdidos, se resetea el turno
+		}
 		
-		
-		
-		
-		
-		
-		
-		
+		return true;
+	}
+	
+	//se eliminan todos los vampiros salvo dracula
+	public boolean receiveLightFlash() {
+		super.health = 0;
+		return true;
+	}
+
 }

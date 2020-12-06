@@ -1,22 +1,35 @@
-//hace referencia al tablero
 package logic;
 
-import logic.list.SlayerList;
-import logic.list.VampireList;
 import java.util.Random;
+
+import logic.GameObjects.Dracula;
+import logic.GameObjects.ExplosiveVampires;
+import logic.GameObjects.Vampire;
+import logic.list.GameObjectList;
 
 public class GameObjectBoard {
 	
 	private Level level;
-	private SlayerList sl;
-	private VampireList vl;
+	private Random random;
+	private GameObjectList list;
 	private String [][] board;
+	private Game game;
+	private int contVampiresOnBoard;
+	private int contVampiresDead;
+	private int contDracula;
+	private boolean explosiveActive;
 	
-	public GameObjectBoard(Level level) {
+	public GameObjectBoard(Level level, Random random, Game game) {
 		this.level = level;
-		this.sl = new SlayerList(this.level);
-		this.vl = new VampireList(this.level);
+		this.random = random;
+		list = new GameObjectList();
 		this.board = new String[this.level.getDimY()][this.level.getDimX()];
+		this.game = game;
+		this.contVampiresOnBoard = 0;
+		this.contVampiresDead =0;
+		this.contDracula = 0;
+		this.explosiveActive = true;
+	
 	}
 
 	/**
@@ -27,17 +40,17 @@ public class GameObjectBoard {
 	}
 
 	/**
-	 * @return the sl
+	 * @param level the level to set
 	 */
-	public SlayerList getSl() {
-		return sl;
+	public void setLevel(Level level) {
+		this.level = level;
 	}
-
+	
 	/**
-	 * @return the vl
+	 * @return the list
 	 */
-	public VampireList getVl() {
-		return vl;
+	public GameObjectList getList() {
+		return list;
 	}
 
 	/**
@@ -47,53 +60,153 @@ public class GameObjectBoard {
 		return board;
 	}
 
-	//---------------------------------------------------------------------	
+	/**
+	 * @param board the board to set
+	 */
+	public void setBoard(String[][] board) {
+		this.board = board;
+	}
 	
-	public void update(int turn, Random random) {
-
-		//mueve vampiro
-		for(int i=0; i < vl.getVLcont(); i++) {
-			moveVampire(turn, i);
-		}
-		//generar vampiro
-		addVampire(turn, random);
+	/**
+	 * @return the contVampires
+	 */
+	public int getContVampiresOnBoard() {
+		return contVampiresOnBoard;
 	}
 
-	public void addSlayer(int y, int x) {
-		if(x != level.getDimX()-1 && board[y][x] == "N")/*tiene dinero, no es ultima columna y la casilla está vacia*/{
-			board[y][x] = "S"; //añadimos slayer al tablero
-			sl.newSlayer(y, x);//añadimos slayer a la lista		
-		}else {
-			System.out.println(control.Controller.invalidPositionMsg);
-		}
-			
+	/**
+	 * @param contVampires the contVampires to set
+	 */
+	public void setContVampiresOnBoard(int contVampires) {
+		this.contVampiresOnBoard = contVampires;
 	}
 
-	public void addVampire(int turn, Random random) {
-		//Random random = new Random();
-		if((vl.getVLcontmuertos()+ vl.getVLcont() < level.getNumVampires()) &&	random.nextDouble() < level.getVampireFreq())/*si no hay el max de vampiros en el tablero y toca introducir vampiro*/ {
-				int posY = random.nextInt(level.getDimY());
-				if(board[posY][level.getDimX()-1] != "V")/*si en la casilla no hay un vampiro*/ {
-					board[posY][level.getDimX()-1] = "V";
-					vl.newVampire(posY,level.getDimX() - 1, turn);
+	/**
+	 * @return the contVampiresDead
+	 */
+	public int getContVampiresDead() {
+		return contVampiresDead;
+	}
+
+	/**
+	 * @param contVampiresDead the contVampiresDead to set
+	 */
+	public void setContVampiresDead(int contVampiresDead) {
+		this.contVampiresDead = contVampiresDead;
+	}
+	
+	/**
+	 * @return the contDracula
+	 */
+	public int getContDracula() {
+		return contDracula;
+	}
+
+	/**
+	 * @param contDracula the contDracula to set
+	 */
+	public void setContDracula(int contDracula) {
+		this.contDracula = contDracula;
+	}
+
+	
+	/**
+	 * @return the explosiveActive
+	 */
+	public boolean isExplosiveActive() {
+		return explosiveActive;
+	}
+
+	/**
+	 * @param explosiveActive the explosiveActive to set
+	 */
+	public void setExplosiveActive(boolean explosiveActive) {
+		this.explosiveActive = explosiveActive;
+	}
+	
+	//-----------------------------
+	//-----------------------------
+	
+	public void update(int turn) {
+		//mover vampiro y eliminar muertos
+		deleteDead();
+		for(int i =0; i < list.getGameobjectsList().size(); i++) {
+			list.getGameobjectsList().get(i).move();	
+		}
+		//añadir vampiros
+		addVampire(turn, "V");
+		addVampire(turn, "EV");
+		if(this.contDracula == 0) {
+			addVampire(turn, "D");
+		}
+	}
+	
+	//eliminamos de forma recursiva aquellos objetos muertos
+	public void deleteDead() {
+		String actual_object;
+		for(int i =0; i < list.getGameobjectsList().size(); i++) {
+			actual_object = board[list.getGameobjectsList().get(i).getPos_y()][list.getGameobjectsList().get(i).getPos_x()];
+			if(!list.getGameobjectsList().get(i).isAlive()) {
+				if(actual_object == "V"){
+					this.contVampiresDead++;
+					this.contVampiresOnBoard--;
 				}
+				else if(actual_object == "EV") {
+					this.contVampiresDead++;
+					this.contVampiresOnBoard--;
+					explosiveVampire(list.getGameobjectsList().get(i).getPos_x(), list.getGameobjectsList().get(i).getPos_y());
+				}
+				else if(actual_object == "D") {
+					this.contDracula--;
+					this.contVampiresDead++;
+					this.contVampiresOnBoard--;
+				}
+				board[list.getGameobjectsList().get(i).getPos_y()][list.getGameobjectsList().get(i).getPos_x()] = null;
+				list.deleteObject(i);
+				deleteDead();
+			}
+		}
+	}
+	
+	//añade un vampiro a la lista
+	public void addVampire(int turn, String iden) {
+		if(this.contVampiresOnBoard + this.contVampiresDead < level.getNumberOfVampires() && random.nextDouble() < level.getVampireFrequency()) {
+			int posY = random.nextInt(level.getDimY());
+			if(board[posY][level.getDimX()-1] == null)/*si en la casilla no hay un vampiro*/ {
+				board[posY][level.getDimX()-1] = iden;
+				if(iden == "D") {/* si creamos un dracula mostramos que esta vivo por consola y actualizamos su contador*/
+					System.out.println("Dracula is alive");
+					list.addObject(new Dracula(level.getDimX()-1, posY, this.game, turn));
+					this.contDracula++;
+				}
+				else if(iden == "EV") {
+					list.addObject(new ExplosiveVampires(level.getDimX()-1, posY, this.game, turn));
+				}
+				else {
+					list.addObject(new Vampire(level.getDimX()-1, posY, this.game, turn));
+				}
+				this.contVampiresOnBoard++;
+			}
+		}
+	}
+	
+	public void explosiveVampire(int x, int y) {
+		int pos;
+		if(this.explosiveActive) {
+			//recorremos una submatriz en la posiciones alrededor de la dada
+			for(int i= y-1; i < y+2; i++) {
+				for(int j= x-1; j < x+2; j++){
+					if(i >= 0 && i < game.getLevel().getDimY() && j >= 0 &&  j < game.getLevel().getDimX() && (board[i][j] == "V" || board[i][j] == "EV")){/*si el objeto es atacante*/
+						pos = list.searchObject(j, i);
+						list.getGameobjectsList().get(pos).setDamage(list.getGameobjectsList().get(pos).getDamage()+1); //incrementamos su daño
+					}
+				}
+			}
 		}
 	}
 
-	public void removeDead(int y, int x)/*pone a null la posicion especificada*/ {
-		board[y][x] = "N";
-	}
 	
-	public void moveVampire(int actualTurn, int i)/*comprobamos que puede mover y mueve*/ {
-		if((actualTurn != vl.getVampireList()[i].getTurn()) && ((actualTurn % 2) == (vl.getVampireList()[i].getTurn() % 2)) && (board[vl.getVampireList()[i].getPosY()][vl.getVampireList()[i].getPosX()-1] == "N")) {
-			board[vl.getVampireList()[i].getPosY()][vl.getVampireList()[i].getPosX()] = "N";//actualizamos el tablero
-			vl.getVampireList()[i].updatePosX();//actualizamos la info del vampiro
-			board[vl.getVampireList()[i].getPosY()][vl.getVampireList()[i].getPosX()] = "V";
-		}
-	}
 	
-	public String returnBox(int y, int x)/*dadas unas coordenadas retorna el contenido de la casilla*/ {
-		return this.board[y][x];
-	}
+
 
 }
