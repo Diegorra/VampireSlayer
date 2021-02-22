@@ -1,6 +1,8 @@
 package control.Commands;
 
+import exceptions.*;
 import logic.Game;
+
 
 public class LightFlashCommand extends Command {
 
@@ -10,14 +12,23 @@ public class LightFlashCommand extends Command {
 	}
 
 	@Override
-	public boolean execute(Game game) {
-		game.lightFlash();
-		game.update();
-		return true;
+	public boolean execute(Game game) throws CommandExecuteException {
+		try {
+			if(game.getPlayer().getMoney() >= 50) {
+				game.lightFlash();
+				game.update();
+				return true;
+				}
+				throw new NotEnoughCoinsException("[ERROR]: Light Flash cost is 50: Not enough coins");
+		}
+		catch(NotEnoughCoinsException notCoins) {
+			System.out.println(notCoins.getMessage());
+			throw new CommandExecuteException(String.format("[ERROR]: Failed to light flash", notCoins));
+		}
 	}
 
 	@Override
-	public Command parse(String[] commandWords) {
+	public Command parse(String[] commandWords) throws CommandParseException {
 		return parseNoParamsCommand(commandWords);
 	}
 

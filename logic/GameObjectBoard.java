@@ -4,6 +4,7 @@ import java.util.Random;
 
 import logic.GameObjects.Dracula;
 import logic.GameObjects.ExplosiveVampires;
+import logic.GameObjects.GameObject;
 import logic.GameObjects.Vampire;
 import logic.list.GameObjectList;
 
@@ -17,7 +18,7 @@ public class GameObjectBoard {
 	private int contVampiresOnBoard;
 	private int contVampiresDead;
 	private int contDracula;
-	private boolean explosiveActive;
+	
 	
 	public GameObjectBoard(Level level, Random random, Game game) {
 		this.level = level;
@@ -28,7 +29,6 @@ public class GameObjectBoard {
 		this.contVampiresOnBoard = 0;
 		this.contVampiresDead =0;
 		this.contDracula = 0;
-		this.explosiveActive = true;
 	
 	}
 
@@ -109,21 +109,6 @@ public class GameObjectBoard {
 		this.contDracula = contDracula;
 	}
 
-	
-	/**
-	 * @return the explosiveActive
-	 */
-	public boolean isExplosiveActive() {
-		return explosiveActive;
-	}
-
-	/**
-	 * @param explosiveActive the explosiveActive to set
-	 */
-	public void setExplosiveActive(boolean explosiveActive) {
-		this.explosiveActive = explosiveActive;
-	}
-	
 	//-----------------------------
 	//-----------------------------
 	
@@ -154,7 +139,7 @@ public class GameObjectBoard {
 				else if(actual_object == "EV") {
 					this.contVampiresDead++;
 					this.contVampiresOnBoard--;
-					explosiveVampire(list.getGameobjectsList().get(i).getPos_x(), list.getGameobjectsList().get(i).getPos_y());
+					explosiveVampire(list.getGameobjectsList().get(i).getPos_x(), list.getGameobjectsList().get(i).getPos_y(),(ExplosiveVampires) list.getGameobjectsList().get(i));
 				}
 				else if(actual_object == "D") {
 					this.contDracula--;
@@ -175,7 +160,6 @@ public class GameObjectBoard {
 			if(board[posY][level.getDimX()-1] == null)/*si en la casilla no hay un vampiro*/ {
 				board[posY][level.getDimX()-1] = iden;
 				if(iden == "D") {/* si creamos un dracula mostramos que esta vivo por consola y actualizamos su contador*/
-					System.out.println("Dracula is alive");
 					list.addObject(new Dracula(level.getDimX()-1, posY, this.game, turn));
 					this.contDracula++;
 				}
@@ -190,23 +174,19 @@ public class GameObjectBoard {
 		}
 	}
 	
-	public void explosiveVampire(int x, int y) {
+	public void explosiveVampire(int x, int y, ExplosiveVampires gameO) {
 		int pos;
-		if(this.explosiveActive) {
+		if(gameO.isExplosiveActive()) {
 			//recorremos una submatriz en la posiciones alrededor de la dada
 			for(int i= y-1; i < y+2; i++) {
 				for(int j= x-1; j < x+2; j++){
 					if(i >= 0 && i < game.getLevel().getDimY() && j >= 0 &&  j < game.getLevel().getDimX() && (board[i][j] == "V" || board[i][j] == "EV")){/*si el objeto es atacante*/
 						pos = list.searchObject(j, i);
-						list.getGameobjectsList().get(pos).setDamage(list.getGameobjectsList().get(pos).getDamage()+1); //incrementamos su daño
+						list.getGameobjectsList().get(pos).setHealth(list.getGameobjectsList().get(pos).getHealth()-1); //decrementamos su vida						//list.getGameobjectsList().get(pos).setDamage(list.getGameobjectsList().get(pos).getDamage()+1); //incrementamos su daño
 					}
 				}
 			}
 		}
 	}
-
-	
-	
-
 
 }

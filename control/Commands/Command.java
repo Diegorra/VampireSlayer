@@ -1,5 +1,6 @@
 package control.Commands;
 
+import exceptions.*;
 import logic.Game;
 
 public abstract class Command {
@@ -20,9 +21,9 @@ public abstract class Command {
 	  }
 	  
 	  //Métodos abstractos
-	  public abstract boolean execute(Game game);
+	  public abstract boolean execute(Game game) throws CommandExecuteException;
 	  
-	  public abstract Command parse(String[] commandWords);
+	  public abstract Command parse(String[] commandWords) throws CommandParseException;
 	  
 	  //Otros métodos
 	  protected boolean matchCommandName(String name) {
@@ -30,17 +31,14 @@ public abstract class Command {
 		        this.name.equalsIgnoreCase(name);
 	  }
 	  
-	  protected Command parseNoParamsCommand(String[] words) {
-	
-			if (matchCommandName(words[0])) {
-				if (words.length != 1) {
-					System.err.println(incorrectArgsMsg);
-					return null;
-				}
-				return this;
-			}
-			
-			return null;
+	  protected Command parseNoParamsCommand(String[] words) throws CommandParseException {
+		  if (matchCommandName(words[0])) {
+			  if (words.length != 1) {
+				  throw new CommandParseException("[ERROR]: Command " + this.name + ": " + incorrectArgsMsg);
+			  }
+			  else return this;
+		  }
+		  return null;
 	  }
 	  
 	  public String helpText(){

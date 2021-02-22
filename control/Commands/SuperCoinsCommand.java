@@ -1,5 +1,6 @@
 package control.Commands;
 
+import exceptions.CommandParseException;
 import logic.Game;
 
 public class SuperCoinsCommand extends Command {
@@ -16,7 +17,7 @@ public class SuperCoinsCommand extends Command {
 	}
 
 	@Override
-	public Command parse(String[] commandWords) {
+	public Command parse(String[] commandWords) throws CommandParseException {
 		return parseNoParamsCommand(commandWords);
 	}
 

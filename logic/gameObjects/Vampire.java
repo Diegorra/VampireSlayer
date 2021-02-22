@@ -35,9 +35,9 @@ public class Vampire extends GameObject {
 			if(other != null) {//sin lo encontramos recive el ataque del vampire
 				other.receiveVampireAttack(damage);
 				//si elimina un blood bank actualizamos su vida
-				if(game.getGameOB().getBoard()[super.pos_y][super.pos_x-1] == "B") {
+				/*if(game.getGameOB().getBoard()[super.pos_y][super.pos_x-1] == "B") {
 					super.health+=1;
-				}
+				}*/
 			}
 		}
 	}
@@ -76,15 +76,15 @@ public class Vampire extends GameObject {
 	
 	//el vampiro se ve empujado a la derecha si está en la última columna muere
 	public boolean receiveGarlicPush() {
-		if(super.pos_x == game.getLevel().getDimX()-1) {
-			super.health = 0;
-		}else if(game.getGameOB().getBoard()[super.pos_y][super.pos_x+1] == null) {
+		/*if(super.pos_x == game.getLevel().getDimX()-1) {
+			super.health = 0; //ponemos su vida a 0 para eliminarlo de la lista
+		}else*/ 
+		if(game.getGameOB().getBoard()[super.pos_y][super.pos_x+1] == null) {
 			game.getGameOB().getBoard()[super.pos_y][super.pos_x+1] = game.getGameOB().getBoard()[super.pos_y][super.pos_x];
 			game.getGameOB().getBoard()[super.pos_y][super.pos_x] = null;
 			super.pos_x++;
-			this.turn = game.getCycles();//se quedan aturdidos, se resetea el turno
 		}
-		
+		this.turn = game.getCycles();//se quedan aturdidos, se resetea el turno
 		return true;
 	}
 	

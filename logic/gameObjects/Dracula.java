@@ -17,9 +17,9 @@ public class Dracula extends Vampire{
 			if(other != null) {//sin lo encontramos recive el ataque del vampire
 				other.receiveDraculaAttack();
 				//si elimina un blood bank actualizamos su vida
-				if(game.getGameOB().getBoard()[super.pos_y][super.pos_x-1] == "B") {
+				/*if(game.getGameOB().getBoard()[super.pos_y][super.pos_x-1] == "B") {
 					super.health+=1;
-				}
+				}*/
 			}
 		}
 	}
